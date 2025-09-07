@@ -2,33 +2,35 @@
   "version": 2,
   "builds": [
     {
-      "src": "frontend/package.json",
+      "src": "ayursutra/frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build"
       }
     },
     {
-      "src": "backend/server.js",
+      "src": "ayursutra/backend/server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/server.js"
+      "dest": "/ayursutra/backend/server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/build/$1"
+      "dest": "/ayursutra/frontend/build/$1"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
   "functions": {
-    "backend/server.js": {
+    "ayursutra/backend/server.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "installCommand": "cd ayursutra/frontend && npm install",
+  "buildCommand": "cd ayursutra/frontend && npm run build"
 }
