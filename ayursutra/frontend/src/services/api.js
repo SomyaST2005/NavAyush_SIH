@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+// Determine base URL: prefer explicit env; use same-origin "/api" in production; fallback to local dev
+const resolvedBaseURL = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://localhost:5000/api');
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: resolvedBaseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -37,10 +40,7 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
-          const response = await axios.post(
-            `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
-            { refreshToken }
-          );
+          const response = await axios.post(`${resolvedBaseURL}/auth/refresh`, { refreshToken });
 
           const { token } = response.data;
           localStorage.setItem('authToken', token);

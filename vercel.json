@@ -6,11 +6,15 @@
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/ayursutra/backend/server.js" },
-    { "source": "/(.*)", "destination": "/ayursutra/frontend/build/$1" }
+    { "source": "/static/(.*)", "destination": "/ayursutra/frontend/build/static/$1" },
+    { "source": "/favicon.ico", "destination": "/ayursutra/frontend/build/favicon.ico" },
+    { "source": "/asset-manifest.json", "destination": "/ayursutra/frontend/build/asset-manifest.json" },
+    { "source": "/manifest.json", "destination": "/ayursutra/frontend/build/manifest.json" },
+    { "source": "/(.*)", "destination": "/ayursutra/frontend/build/index.html" }
   ],
   "env": {
     "NODE_ENV": "production"
   },
-  "installCommand": "cd ayursutra/frontend && npm install",
+  "installCommand": "npm --version && (cd ayursutra/backend && npm ci || npm install) && (cd ayursutra/frontend && npm ci || npm install)",
   "buildCommand": "cd ayursutra/frontend && npm run build"
 }
