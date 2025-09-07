@@ -1,0 +1,138 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ayursutra-backend
+  namespace: ayursutra
+  labels:
+    app: ayursutra-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ayursutra-backend
+  template:
+    metadata:
+      labels:
+        app: ayursutra-backend
+    spec:
+      containers:
+      - name: ayursutra-backend
+        image: ayursutra/backend:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ayursutra-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ayursutra-config
+              key: PORT
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ayursutra-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ayursutra-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ayursutra-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: ayursutra-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ayursutra-secrets
+              key: DB_PASSWORD
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ayursutra-secrets
+              key: JWT_SECRET_KEY
+        - name: JWT_REFRESH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ayursutra-secrets
+              key: JWT_REFRESH_SECRET
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ayursutra-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ayursutra-config
+              key: REDIS_PORT
+        - name: SENDGRID_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ayursutra-secrets
+              key: SENDGRID_API_KEY
+        - name: TWILIO_ACCOUNT_SID
+          valueFrom:
+            secretKeyRef:
+              name: ayursutra-secrets
+              key: TWILIO_ACCOUNT_SID
+        - name: TWILIO_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ayursutra-secrets
+              key: TWILIO_AUTH_TOKEN
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: ayursutra-uploads-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: ayursutra-logs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ayursutra-backend-service
+  namespace: ayursutra
+spec:
+  selector:
+    app: ayursutra-backend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: ClusterIP

@@ -1,0 +1,58 @@
+{
+  "name": "ayursutra-frontend",
+  "version": "1.0.0",
+  "description": "Frontend React application for AyurSutra Panchakarma Management System",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.2",
+    "axios": "^1.5.0",
+    "lucide-react": "^0.263.1",
+    "recharts": "^2.7.2",
+    "date-fns": "^2.30.0",
+    "react-hook-form": "^7.45.2",
+    "react-hot-toast": "^2.4.1",
+    "clsx": "^2.0.0",
+    "framer-motion": "^10.16.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .js,.jsx",
+    "lint:fix": "eslint src --ext .js,.jsx --fix",
+    "format": "prettier --write src/**/*.{js,jsx,css,md}"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "tailwindcss": "^3.3.3",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "proxy": "http://localhost:5000"
+}
