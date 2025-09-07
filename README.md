@@ -7,6 +7,12 @@ A comprehensive Ayurvedic healthcare management platform with AI-powered schedul
 ![Node.js](https://img.shields.io/badge/Node.js-Express-green)
 ![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)
 
+## 🏆 SIH 2025 Context
+
+- Built for Smart India Hackathon 2025
+- Problem Statement ID: 25023
+- Problem Statement Title : AyurSutra- Panchakarma Patient Management and therapy scheduling Software
+
 ## 🌟 Features
 
 - **Patient Dashboard** - Progress tracking, appointment booking, treatment history
@@ -14,38 +20,32 @@ A comprehensive Ayurvedic healthcare management platform with AI-powered schedul
 - **AI Scheduling** - Intelligent appointment optimization (coming soon)
 - **Role-based Authentication** - Secure JWT-based access control
 - **Responsive Design** - Modern UI with Tailwind CSS
-- **Real-time Analytics** - Treatment effectiveness and progress metrics
+- **Real-time Analytics** - Treatment effectiveness and progress metrics(coming soon)
 
-## 🚀 Live Demo
 
-🔗 **[View Live Application](https://ayursutra-panchakarma-system.vercel.app)**
+## 🖼️ Screenshots (Demo)
 
-## 📁 Project Structure
+Note: These are prototype UI screens.
 
-```
-ayursutra/
-├── frontend/          # React.js application
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Route components
-│   │   ├── hooks/         # Custom React hooks
-│   │   └── contexts/      # React contexts
-├── backend/           # Node.js/Express API
-│   ├── routes/        # API endpoints
-│   ├── middleware/    # Authentication & validation
-│   └── models/        # Database models
-├── ai-service/        # Python AI scheduling (future)
-├── kubernetes/        # K8s deployment manifests
-└── docs/             # Documentation
-```
+![Landing](./docs/assests/landing_page.png)
+![Login](./docs/assests/Login_page.png)
+![Register](./docs/assests/register_page.png)
+![Patient Dashboard](./docs/assests/patient-dashboard-overview_page.png)
+![Practitioner Dashboard](./docs/assests/practitioner-dashboard-overview_page.png)
+![Practictioner Practicing on Patients](./docs/assests/practitioner-dashboard-patients_page.png)
+![Treatment Planner](./docs/assests/practitioner-dashboard-treatmentsplan_page.png)
+![AI Insights](./docs/assests/practitioner-dashboard-AI-Insights_page.png)
+![Analytics](./docs/assests/practitioner-dashboard-analytics_page.png)
+
+
 
 ## 🛠️ Technology Stack
 
 - **Frontend**: React.js, Tailwind CSS, React Router, Recharts
 - **Backend**: Node.js, Express.js, JWT Authentication
 - **Database**: PostgreSQL (production), Mock data (development)
-- **Deployment**: Vercel
-- **Future**: AI Service (Python), Kubernetes scaling
+- **Deployment**: Vercel(soon)
+- **Future**: AI Service (Python), Kubernetes scaling(soon)
 
 ## ⚡ Quick Start
 
@@ -74,30 +74,7 @@ npm run dev
 - Frontend: http://localhost:3000
 - Backend: http://localhost:5000
 
-## 🌐 Deployment
 
-### Vercel (Recommended)
-
-1. **Fork this repository**
-2. **Connect to Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Import your GitHub repository
-   - Vercel auto-detects configuration
-
-3. **Set Environment Variables**
-```env
-NODE_ENV=production
-REACT_APP_API_URL=https://your-app.vercel.app
-DATABASE_URL=your-postgres-connection-string
-JWT_SECRET=your-secret-key
-```
-
-### Future Database Setup
-
-When ready for PostgreSQL:
-- Add Vercel Postgres from dashboard
-- Update `DATABASE_URL` environment variable
-- Database migrations run automatically
 
 ## 🎯 Demo Credentials
 
@@ -131,23 +108,11 @@ When ready for PostgreSQL:
 - [ ] **Phase 4**: Mobile app development
 - [ ] **Phase 5**: Multi-center management
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](ayursutra/LICENSE) file for details.
+This project is licensed under Our Group - NavAyush for SIH 2025
 
-## 📞 Support
-
-- **Documentation**: [Full Documentation](ayursutra/docs/)
-- **Issues**: [GitHub Issues](https://github.com/SomyaST2005/ayursutra-panchakarma-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/SomyaST2005/ayursutra-panchakarma-system/discussions)
 
 ## 🙏 Acknowledgments
 
@@ -157,4 +122,4 @@ This project is licensed under the MIT License - see the [LICENSE](ayursutra/LIC
 
 ---
 
-**Made with ❤️ for holistic wellness** | **© 2025 AyurSutra**
+**Made with ❤️ for holistic wellness By NavAyush Team** | **© 2025 AyurSutra**
