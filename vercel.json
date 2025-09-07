@@ -1,14 +1,14 @@
 {
   "version": 2,
   "builds": [
-    { "src": "frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } },
-    { "src": "backend/server.js", "use": "@vercel/node" }
+    { "src": "ayursutra/frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } },
+    { "src": "ayursutra/backend/server.js", "use": "@vercel/node" }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/backend/server.js" },
-    { "source": "/(.*)", "destination": "/frontend/build/index.html" }
+    { "source": "/api/(.*)", "destination": "/ayursutra/backend/server.js" },
+    { "source": "/(.*)", "destination": "/ayursutra/frontend/build/index.html" }
   ],
   "env": { "NODE_ENV": "production" },
-  "installCommand": "(cd backend && npm ci || npm i) && (cd frontend && npm ci || npm i)",
-  "buildCommand": "cd frontend && npm run build"
+  "installCommand": "(cd ayursutra/backend && npm ci || npm i) && (cd ayursutra/frontend && npm ci || npm i)",
+  "buildCommand": "cd ayursutra/frontend && npm run build"
 }
