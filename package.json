@@ -7,10 +7,11 @@
     "dev": "cd ayursutra && npm run dev",
     "server": "cd ayursutra && npm run server",
     "client": "cd ayursutra && npm run client",
-    "build": "cd ayursutra/frontend && npm install && npm run build",
-    "start": "cd ayursutra && npm start",
-    "install-deps": "cd ayursutra && npm install && cd frontend && npm install && cd ../backend && npm install",
-    "vercel-build": "cd ayursutra/frontend && npm install && npm run build"
+    "vercel-build": "cd ayursutra/frontend && npm install && npm run build",
+    "start": "cd ayursutra/frontend && npm start",
+    "build": "cd ayursutra/frontend && npm run build",
+    "test": "cd ayursutra/frontend && npm test",
+    "install-deps": "cd ayursutra && npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "keywords": [
     "ayurveda",
