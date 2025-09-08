@@ -4,15 +4,19 @@
     { "src": "ayursutra/frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } },
     { "src": "ayursutra/backend/server.js", "use": "@vercel/node" }
   ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/ayursutra/backend/server.js" },
-    { "source": "/static/(.*)", "destination": "/static/$1" },
-    { "source": "/favicon.ico", "destination": "/favicon.ico" },
-    { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" },
-    { "source": "/manifest.json", "destination": "/manifest.json" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "functions": {
+    "ayursutra/backend/server.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 10,
+      "memory": 1024
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "ayursutra/backend/server.js" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "env": { "NODE_ENV": "production" },
-  "installCommand": "(cd ayursutra/backend && npm ci || npm i) && (cd ayursutra/frontend && npm ci || npm i)",
-  "buildCommand": "cd ayursutra/frontend && npm run build"
+  "installCommand": "npm --prefix ayursutra/frontend ci && npm --prefix ayursutra/backend ci --omit=dev",
+  "buildCommand": "npm --prefix ayursutra/frontend run build"
 }
