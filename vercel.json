@@ -12,11 +12,9 @@
     }
   },
   "routes": [
-    { "src": "/api/(.*)", "dest": "ayursutra/backend/server.js" },
+    { "src": "/api/(.*)", "dest": "/ayursutra/backend/server.js" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
-  "env": { "NODE_ENV": "production" },
-  "installCommand": "npm --prefix ayursutra/frontend ci && npm --prefix ayursutra/backend ci --omit=dev",
-  "buildCommand": "npm --prefix ayursutra/frontend run build"
+  "env": { "NODE_ENV": "production" }
 }
