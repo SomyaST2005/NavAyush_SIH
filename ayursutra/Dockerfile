@@ -11,8 +11,8 @@ RUN npm run build
 FROM node:18-alpine
 WORKDIR /app
 
-# System deps for healthcheck + postgres migrations
-RUN apk add --no-cache curl postgresql-client && rm -rf /var/cache/apk/*
+# System deps for healthcheck only
+RUN apk add --no-cache curl && rm -rf /var/cache/apk/*
 
 # Non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S ayursutra -u 1001
