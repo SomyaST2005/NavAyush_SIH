@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -12,122 +13,90 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored auth data on app load
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('authUser');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const restoreSession = async () => {
+      try {
+        const response = await api.get('/auth/me');
+        if (response.data.success) {
+          setUser(response.data.user);
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    restoreSession();
   }, []);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setUser(data.user);
-        setToken(data.token);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('authUser', JSON.stringify(data.user));
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken);
-        }
-        return { success: true, user: data.user };
-      } else {
-        return { success: false, message: data.message };
+      const response = await api.post('/auth/login', { email, password });
+      if (response.data.success) {
+        setUser(response.data.user);
+        return { success: true, user: response.data.user };
       }
+      return { success: false, message: response.data.message };
     } catch (error) {
-      return { success: false, message: 'Network error. Please try again.' };
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Network error. Please try again.',
+      };
     }
-  };
+  }, []);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setUser(data.user);
-        setToken(data.token);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('authUser', JSON.stringify(data.user));
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken);
-        }
-        return { success: true, user: data.user };
-      } else {
-        return { success: false, message: data.message };
+      const response = await api.post('/auth/register', userData);
+      if (response.data.success) {
+        setUser(response.data.user);
+        return { success: true, user: response.data.user };
       }
+      return { success: false, message: response.data.message };
     } catch (error) {
-      return { success: false, message: 'Network error. Please try again.' };
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Network error. Please try again.',
+      };
     }
-  };
+  }, []);
 
-  const updateProfile = async (profileData) => {
+  const updateProfile = useCallback(async (profileData) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(profileData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const updatedUser = { ...user, ...data.user };
-        setUser(updatedUser);
-        localStorage.setItem('authUser', JSON.stringify(updatedUser));
-        return { success: true, user: updatedUser };
-      } else {
-        return { success: false, message: data.message };
+      const response = await api.put('/patient/profile', profileData);
+      if (response.data.success) {
+        setUser(prev => ({ ...prev, ...response.data.user }));
+        return { success: true };
       }
+      return { success: false, message: response.data.message };
     } catch (error) {
-      return { success: false, message: 'Network error. Please try again.' };
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Network error. Please try again.',
+      };
     }
-  };
+  }, []);
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-    localStorage.removeItem('refreshToken');
-  };
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Logout should always succeed locally
+    } finally {
+      setUser(null);
+    }
+  }, []);
 
   const value = {
     user,
-    token,
     login,
     register,
     updateProfile,
     logout,
     loading,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
   return (

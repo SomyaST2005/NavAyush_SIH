@@ -450,10 +450,10 @@ const TreatmentHistory = () => {
 
                 {/* Actions */}
                 <div className="flex space-x-3 pt-4 border-t border-gray-200">
-                  <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                  <button onClick={() => alert('Booking page coming soon')} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
                     Book Similar Session
                   </button>
-                  <button className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                  <button onClick={() => { const csv = 'Date,Treatment,Practitioner,Notes\n' + (selectedAppointment ? `${selectedAppointment.date},${selectedAppointment.treatment},${selectedAppointment.practitioner},"${selectedAppointment.notes?.replace(/"/g,'""') || ''}"` : ''); const blob = new Blob([csv], {type: 'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'treatment-report.csv'; a.click(); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors">
                     Download Report
                   </button>
                 </div>

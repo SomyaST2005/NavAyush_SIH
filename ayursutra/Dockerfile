@@ -1,62 +1,37 @@
-# Multi-stage build for AyurSutra Application
+# Multi-stage build for AyurSutra
+# Stage 1: Build React frontend
 FROM node:18-alpine AS frontend-build
-
-# Set working directory for frontend
 WORKDIR /app/frontend
-
-# Copy frontend package files
 COPY frontend/package*.json ./
-
-# Install frontend dependencies
-RUN npm ci --only=production
-
-# Copy frontend source code
+RUN npm ci
 COPY frontend/ ./
-
-# Build frontend application
 RUN npm run build
 
-# Backend stage
-FROM node:18-alpine AS backend
-
-# Install system dependencies
-RUN apk add --no-cache \
-    postgresql-client \
-    curl \
-    && rm -rf /var/cache/apk/*
-
-# Create app directory
+# Stage 2: Production backend + serve frontend
+FROM node:18-alpine
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S ayursutra -u 1001
+# System deps for healthcheck + postgres migrations
+RUN apk add --no-cache curl postgresql-client && rm -rf /var/cache/apk/*
 
-# Copy backend package files
+# Non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S ayursutra -u 1001
+
+# Backend deps
 COPY backend/package*.json ./
+RUN npm ci --only=production
 
-# Install backend dependencies
-RUN npm ci --only=production && npm cache clean --force
-
-# Copy backend source code
+# Backend source
 COPY backend/ ./
 
-# Copy built frontend from previous stage
+# Frontend build (served by Express as static)
 COPY --from=frontend-build /app/frontend/build ./public
 
-# Create necessary directories
-RUN mkdir -p logs uploads temp && \
-    chown -R ayursutra:nodejs /app
-
-# Switch to non-root user
+# Create writable dirs
+RUN mkdir -p logs uploads temp && chown -R ayursutra:nodejs /app
 USER ayursutra
 
-# Expose port
 EXPOSE 5000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD curl -f http://localhost:5000/api/health || exit 1
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/api/health || exit 1
-
-# Start the application
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

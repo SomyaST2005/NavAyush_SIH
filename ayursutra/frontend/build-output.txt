@@ -1,0 +1,13 @@
+Creating an optimized production build...
+Failed to compile.
+
+SyntaxError: C:\Users\Utkarsh\OneDrive\Desktop\Somya files\PROJECTS(MADE)\Ayursutra\NavAyush_SIH\ayursutra\frontend\src\pages\patient\Profile.jsx: Unexpected token, expected "," (281:20)
+[0m [90m 279 |[39m                       className[33m=[39m{[32m`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${validationErrors.fullName ? 'border-red-300' : 'border-gray-300'}`[39m}
+ [90m 280 |[39m                     [33m/[39m[33m>[39m
+[31m[1m>[22m[39m[90m 281 |[39m                     {validationErrors[33m.[39mfullName [33m&&[39m (
+ [90m     |[39m                     [31m[1m^[22m[39m
+ [90m 282 |[39m                       [33m<[39m[33mp[39m className[33m=[39m[32m"text-red-600 text-xs mt-1"[39m[33m>[39m{validationErrors[33m.[39mfullName}[33m<[39m[33m/[39m[33mp[39m[33m>[39m
+ [90m 283 |[39m                     )}
+ [90m 284 |[39m                   ) [33m:[39m ([0m
+
+

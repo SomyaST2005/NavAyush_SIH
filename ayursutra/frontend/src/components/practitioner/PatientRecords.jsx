@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, FileText, Calendar, User, Phone, Mail, MapPin, Edit, Eye, Plus, Download } from 'lucide-react';
+import { Search, FileText, Calendar, User, Phone, Mail, MapPin, Edit, Plus, Download, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const PatientRecords = () => {
   const [patients, setPatients] = useState([]);
@@ -197,7 +198,7 @@ const PatientRecords = () => {
             <Plus className="h-4 w-4" />
             <span>Add Patient</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+          <button onClick={() => { const csv = 'Name,Age,Gender,Phone,Email\n' + patients.map(p => [p.name, p.age, p.gender, p.phone, p.email].join(',')).join('\n'); const blob = new Blob([csv], {type: 'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'patient-records.csv'; a.click(); toast.success('Records exported'); }} className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
             <Download className="h-4 w-4" />
             <span>Export</span>
           </button>
@@ -478,6 +479,27 @@ const PatientRecords = () => {
           )}
         </div>
       </div>
+
+      {/* Add Patient Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between"><h3 className="font-semibold text-gray-800">Add New Patient Record</h3><button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button></div>
+            <div className="p-4 space-y-3">
+              <input type="text" placeholder="Full Name" className="w-full p-2 border border-gray-300 rounded-lg" />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="number" placeholder="Age" className="w-full p-2 border border-gray-300 rounded-lg" />
+                <select className="w-full p-2 border border-gray-300 rounded-lg"><option>Male</option><option>Female</option></select>
+              </div>
+              <input type="tel" placeholder="Phone" className="w-full p-2 border border-gray-300 rounded-lg" />
+              <input type="email" placeholder="Email" className="w-full p-2 border border-gray-300 rounded-lg" />
+              <input type="text" placeholder="Address" className="w-full p-2 border border-gray-300 rounded-lg" />
+              <select className="w-full p-2 border border-gray-300 rounded-lg"><option>Vata</option><option>Pitta</option><option>Kapha</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option></select>
+              <button onClick={() => { toast.success('Patient record created'); setShowAddModal(false); }} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg">Create Record</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

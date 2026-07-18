@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AppointmentCalendar from './AppointmentCalendar';
 import ProgressChart from './ProgressChart';
@@ -10,6 +11,7 @@ import { Calendar, Clock, Activity, Bell, User, Heart } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patientData, setPatientData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,10 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -147,7 +152,7 @@ const Dashboard = () => {
             </div>
 
             {/* Progress Chart */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div id="progress-section" className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="p-6 border-b border-gray-100">
                 <h2 className="text-xl font-semibold text-gray-800 flex items-center">
                   <Activity className="h-5 w-5 mr-2 text-blue-600" />
@@ -188,15 +193,24 @@ const Dashboard = () => {
         <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors">
+            <button
+              onClick={() => navigate('/patient/book-appointment')}
+              className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors"
+            >
               <Calendar className="h-5 w-5 mr-2 text-green-600" />
               <span className="font-medium text-green-700">Book Appointment</span>
             </button>
-            <button className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors">
+            <button
+              onClick={() => document.getElementById('progress-section')?.scrollIntoView({ behavior: 'smooth' })}
+              className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+            >
               <Activity className="h-5 w-5 mr-2 text-blue-600" />
               <span className="font-medium text-blue-700">View Progress</span>
             </button>
-            <button className="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors">
+            <button
+              onClick={() => navigate('/patient/profile')}
+              className="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors"
+            >
               <User className="h-5 w-5 mr-2 text-purple-600" />
               <span className="font-medium text-purple-700">Update Profile</span>
             </button>

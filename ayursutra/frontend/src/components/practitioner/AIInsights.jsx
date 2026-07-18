@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, TrendingUp, Users, AlertTriangle, Lightbulb, BarChart3, PieChart, Activity } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
 const AIInsights = () => {
   const [insights, setInsights] = useState(null);
@@ -312,7 +312,7 @@ const AIInsights = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
                   <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} />
-                  <RechartsPieChart
+                  <Pie
                     data={insights.constitutionDistribution}
                     cx="50%"
                     cy="50%"
@@ -324,7 +324,7 @@ const AIInsights = () => {
                     {insights.constitutionDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
-                  </RechartsPieChart>
+                  </Pie>
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
@@ -368,7 +368,10 @@ const AIInsights = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">Action: {rec.action}</span>
-                  <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                  <button
+                    onClick={() => alert(`Implementation started: ${rec.action}`)}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                  >
                     Implement
                   </button>
                 </div>

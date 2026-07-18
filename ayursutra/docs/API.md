@@ -2,577 +2,312 @@
 
 ## Overview
 
-The AyurSutra API is a RESTful service built with Node.js and Express.js that provides endpoints for managing Ayurvedic healthcare operations, including patient management, appointment scheduling, treatment planning, and AI-powered insights.
+RESTful API for the AyurSutra Panchakarma Management System. All endpoints use JSON and return `{ success: boolean, ... }` format.
 
 ## Base URL
 
 ```
-Production: https://api.ayursutra.com
-Development: http://localhost:5000
+Development: http://localhost:5000/api
+Production:  https://api.ayursutra.com/api
 ```
 
 ## Authentication
 
-The API uses JWT (JSON Web Tokens) for authentication. Include the token in the Authorization header:
+Uses JWT with **httpOnly cookies** — tokens are never exposed to JavaScript. The browser automatically sends them with every request (`withCredentials: true`).
 
-```
-Authorization: Bearer <your_jwt_token>
-```
+Access token: 15 min  |  Refresh token: 7 days
 
-### Authentication Endpoints
+All endpoints except `/api/auth/*` public routes require authentication.
 
-#### POST /api/auth/login
-Login with email and password.
+---
+
+## Auth Endpoints
+
+### POST /api/auth/login
+Login with email and password. Sets httpOnly cookies.
 
 **Request:**
 ```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
+{ "email": "patient@ayursutra.com", "password": "password123" }
 ```
 
-**Response:**
+**Response (200):**
 ```json
 {
   "success": true,
-  "data": {
-    "user": {
-      "id": 1,
-      "email": "user@example.com",
-      "role": "patient",
-      "fullName": "John Doe"
-    },
-    "tokens": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
-    }
-  }
+  "user": { "id": 2, "fullName": "Rajesh Kumar", "email": "patient@ayursutra.com", "role": "patient" }
 }
 ```
 
-#### POST /api/auth/register
-Register a new user account.
+**Response (401):**
+```json
+{ "success": false, "message": "Invalid credentials" }
+```
+
+### POST /api/auth/register
+Register a new user account. Sets httpOnly cookies.
 
 **Request:**
 ```json
 {
-  "email": "user@example.com",
-  "password": "password123",
   "fullName": "John Doe",
-  "phone": "+1234567890",
+  "email": "john@example.com",
+  "password": "securepass123",
+  "phone": "+91 99999 00000",
   "role": "patient",
   "dateOfBirth": "1990-01-01"
 }
 ```
 
-#### POST /api/auth/refresh
-Refresh access token using refresh token.
-
-**Request:**
+**Response (201):**
 ```json
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
-}
+{ "success": true, "user": { "id": 3, "fullName": "John Doe", "email": "john@example.com", "role": "patient" } }
 ```
 
-#### POST /api/auth/logout
-Logout and invalidate tokens.
-
-#### POST /api/auth/forgot-password
-Request password reset email.
-
-**Request:**
+**Response (409):**
 ```json
-{
-  "email": "user@example.com"
-}
+{ "success": false, "message": "Email already registered" }
 ```
 
-## User Management
+### POST /api/auth/logout
+Clears auth + refresh cookies and invalidates refresh token in DB.
 
-#### GET /api/users/profile
-Get current user profile.
+**Response (200):**
+```json
+{ "success": true, "message": "Logged out successfully" }
+```
 
-**Response:**
+### POST /api/auth/refresh
+Uses refresh token cookie to issue new access + refresh tokens.
+
+**Response (200):** `{ "success": true }`  |  **Response (401):** `{ "success": false, "message": "Invalid or expired refresh token" }`
+
+### GET /api/auth/me
+Returns current user from auth cookie. Used for session restore on page load.
+
+**Response (200):**
+```json
+{ "success": true, "user": { "id": 1, "fullName": "Dr. Ayurveda Sharma", "email": "doctor@ayursutra.com", "role": "practitioner", "phone": "+91 99999 11111" } }
+```
+
+### POST /api/auth/forgot-password
+Request password reset. Returns success regardless of whether email exists (prevents user enumeration).
+
+**Request:** `{ "email": "user@example.com" }`
+
+**Response (200):** `{ "success": true, "message": "If an account exists, a reset link will be sent" }`
+
+### POST /api/auth/reset-password
+Reset password using token from forgot-password flow.
+
+**Request:** `{ "token": "jwt_reset_token", "password": "newpassword123" }`
+
+**Response (200):** `{ "success": true, "message": "Password reset successfully" }`
+
+---
+
+## Patient Endpoints
+
+All require authentication. Patients see only their own data; practitioners see their assigned patients.
+
+### GET /api/patients
+List patients. Optional: `?limit=10&offset=0`
+
+**Response (200):**
+```json
+{ "success": true, "patients": [{ "id": "P001", "name": "Rajesh Kumar", "age": 45, "gender": "Male", "constitution": "Vata-Pitta", "status": "Active", ... }] }
+```
+
+### GET /api/patients/:id
+Get patient with appointments and treatments.
+
+**Response (200):**
 ```json
 {
   "success": true,
-  "data": {
-    "id": 1,
-    "email": "user@example.com",
-    "fullName": "John Doe",
-    "phone": "+1234567890",
-    "role": "patient",
-    "isActive": true,
-    "createdAt": "2024-01-01T00:00:00.000Z"
+  "patient": {
+    "id": "P001", "name": "Rajesh Kumar", ...,
+    "appointments": [{ "id": 1, "scheduledDate": "2024-01-22", "status": "scheduled", ... }],
+    "treatments": [{ "id": 1, "type": "Panchakarma", "status": "Active", "completedSessions": 14, ... }]
   }
 }
 ```
 
-#### PUT /api/users/profile
-Update user profile.
+### POST /api/patients
+Create patient record (practitioner/admin only).
+
+**Request:**
+```json
+{ "name": "New Patient", "age": 30, "gender": "Male", "phone": "+91 88888 00000", "constitution": "Vata", "currentCondition": "Back pain" }
+```
+
+**Response (201):**
+```json
+{ "success": true, "patient": { "id": "P...", "name": "New Patient", ... } }
+```
+
+**Validation (400):**
+```json
+{ "success": false, "message": "Validation failed", "errors": [{ "field": "name", "message": "\"name\" is required" }] }
+```
+
+### PUT /api/patients/:id
+Update patient (practitioner/admin only).
+
+**Request:**
+```json
+{ "name": "Updated Name", "status": "Completed" }
+```
+
+---
+
+## Appointment Endpoints
+
+All require authentication. Role-scoped: patients see own, practitioners see assigned.
+
+### GET /api/appointments
+List appointments. Optional query params: `?status=scheduled&date=2024-01-22&limit=20`
+
+**Response (200):**
+```json
+{ "success": true, "appointments": [{ "id": 1, "patientId": "P001", "scheduledDate": "2024-01-22", "scheduledTime": "10:00:00", "treatmentType": "Abhyanga", "status": "scheduled", ... }] }
+```
+
+### GET /api/appointments/:id
+Get single appointment with patient and practitioner details.
+
+### POST /api/appointments
+Book a new appointment.
 
 **Request:**
 ```json
 {
-  "fullName": "John Smith",
-  "phone": "+1234567891"
-}
-```
-
-#### PUT /api/users/password
-Change password.
-
-**Request:**
-```json
-{
-  "currentPassword": "oldpassword",
-  "newPassword": "newpassword123"
-}
-```
-
-## Patient Management
-
-#### GET /api/patients
-Get all patients (practitioners only).
-
-**Query Parameters:**
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10)
-- `search`: Search term
-- `constitution`: Filter by constitution type
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "patients": [
-      {
-        "id": 1,
-        "userId": 2,
-        "constitution": "Vata-Pitta",
-        "medicalHistory": [],
-        "allergies": ["Peanuts"],
-        "user": {
-          "fullName": "Jane Doe",
-          "email": "jane@example.com"
-        }
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "total": 50,
-      "pages": 5
-    }
-  }
-}
-```
-
-#### GET /api/patients/:id
-Get patient details.
-
-#### POST /api/patients
-Create new patient record.
-
-**Request:**
-```json
-{
-  "userId": 2,
-  "constitution": "Vata-Pitta",
-  "medicalHistory": [
-    {
-      "condition": "Arthritis",
-      "severity": "Moderate",
-      "date": "2023-01-01"
-    }
-  ],
-  "allergies": ["Peanuts", "Shellfish"],
-  "emergencyContact": {
-    "name": "John Doe",
-    "phone": "+1234567890",
-    "relationship": "Spouse"
-  }
-}
-```
-
-#### PUT /api/patients/:id
-Update patient record.
-
-## Appointment Management
-
-#### GET /api/appointments
-Get appointments.
-
-**Query Parameters:**
-- `startDate`: Filter from date (YYYY-MM-DD)
-- `endDate`: Filter to date (YYYY-MM-DD)
-- `status`: Filter by status (scheduled, completed, cancelled)
-- `patientId`: Filter by patient ID
-- `practitionerId`: Filter by practitioner ID
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "patientId": 1,
-      "practitionerId": 1,
-      "treatmentType": "Abhyanga",
-      "scheduledDate": "2024-01-20",
-      "scheduledTime": "10:00",
-      "duration": 60,
-      "status": "scheduled",
-      "notes": "First session",
-      "patient": {
-        "user": {
-          "fullName": "Jane Doe"
-        }
-      },
-      "practitioner": {
-        "user": {
-          "fullName": "Dr. Smith"
-        }
-      }
-    }
-  ]
-}
-```
-
-#### POST /api/appointments
-Book new appointment.
-
-**Request:**
-```json
-{
-  "patientId": 1,
-  "practitionerId": 1,
-  "treatmentType": "Abhyanga",
-  "scheduledDate": "2024-01-20",
-  "scheduledTime": "10:00",
+  "patientId": "P001",
+  "scheduledDate": "2024-01-25",
+  "scheduledTime": "10:00:00",
   "duration": 60,
-  "notes": "First consultation"
-}
-```
-
-#### PUT /api/appointments/:id
-Update appointment.
-
-#### DELETE /api/appointments/:id
-Cancel appointment.
-
-#### POST /api/appointments/:id/reschedule
-Reschedule appointment.
-
-**Request:**
-```json
-{
-  "scheduledDate": "2024-01-21",
-  "scheduledTime": "14:00"
-}
-```
-
-## Treatment Management
-
-#### GET /api/treatments
-Get treatment plans.
-
-#### POST /api/treatments
-Create treatment plan.
-
-**Request:**
-```json
-{
-  "patientId": 1,
-  "practitionerId": 1,
-  "treatmentType": "Panchakarma",
-  "startDate": "2024-01-15",
-  "endDate": "2024-02-15",
-  "sessions": [
-    {
-      "type": "Consultation",
-      "scheduledDate": "2024-01-15",
-      "duration": 45,
-      "notes": "Initial assessment"
-    }
-  ],
-  "goals": "Improve joint mobility and reduce pain",
-  "notes": "Patient has chronic arthritis"
-}
-```
-
-#### GET /api/treatments/:id
-Get treatment plan details.
-
-#### PUT /api/treatments/:id
-Update treatment plan.
-
-#### POST /api/treatments/:id/sessions
-Add session to treatment plan.
-
-#### PUT /api/treatments/:treatmentId/sessions/:sessionId
-Update treatment session.
-
-## AI Scheduling
-
-#### POST /api/ai/optimal-slots
-Get optimal appointment slots.
-
-**Request:**
-```json
-{
-  "patientId": 1,
-  "practitionerId": 1,
   "treatmentType": "Abhyanga",
-  "preferredDate": "2024-01-20",
-  "duration": 60
+  "notes": "First session",
+  "isVirtual": false
 }
 ```
 
-**Response:**
+**Response (201):**
+```json
+{ "success": true, "appointment": { "id": 6, "patientId": "P001", "status": "scheduled", ... } }
+```
+
+### PUT /api/appointments/:id
+Update appointment (practitioner only).
+
+**Request:**
+```json
+{ "status": "completed", "notes": "Session went well" }
+```
+
+### PUT /api/appointments/:id/cancel
+Cancel appointment (sets status to "cancelled").
+
+---
+
+## Treatment Endpoints
+
+### GET /api/treatments
+List treatments. Optional: `?status=Active`
+
+### GET /api/treatments/:id
+Get treatment with patient details.
+
+### POST /api/treatments
+Create treatment plan (practitioner only).
+
+**Request:**
 ```json
 {
-  "success": true,
-  "data": {
-    "recommendedSlots": [
-      {
-        "date": "2024-01-20",
-        "time": "10:00",
-        "score": 0.95,
-        "reasons": ["Optimal time for patient", "Practitioner availability"]
-      }
-    ]
-  }
+  "patientId": "P001",
+  "type": "Abhyanga",
+  "startDate": "2024-02-01",
+  "totalSessions": 12
 }
 ```
 
-#### POST /api/ai/schedule-appointment
-AI-powered appointment scheduling.
+### PUT /api/treatments/:id
+Update treatment plan (practitioner only). Fields: `type`, `endDate`, `status`, `totalSessions`, `completedSessions`, `notes`.
 
-#### GET /api/ai/insights/:practitionerId
-Get AI insights for practitioner.
+---
 
-## Notifications
+## Notification Endpoints
 
-#### GET /api/notifications
-Get user notifications.
+### GET /api/notifications
+Get user's notifications. Optional: `?unreadOnly=true`
 
-**Response:**
+**Response (200):**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "type": "appointment_reminder",
-      "title": "Appointment Reminder",
-      "message": "You have an appointment tomorrow at 10:00 AM",
-      "isRead": false,
-      "createdAt": "2024-01-19T10:00:00.000Z"
-    }
-  ]
-}
+{ "success": true, "notifications": [{ "id": 1, "title": "Appointment Reminder", "message": "...", "isRead": false, "type": "appointment", "createdAt": "..." }] }
 ```
 
-#### PUT /api/notifications/:id/read
+### GET /api/notifications/:id
+Get single notification (scoped to current user).
+
+### PUT /api/notifications/:id/read
 Mark notification as read.
 
-#### POST /api/notifications/send
-Send notification (admin only).
+### PUT /api/notifications/mark-all-read
+Mark all notifications as read.
 
-## Analytics
+### DELETE /api/notifications/:id
+Delete notification.
 
-#### GET /api/analytics/dashboard/:practitionerId
-Get practitioner dashboard analytics.
+---
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "overview": {
-      "totalPatients": 127,
-      "activePatients": 45,
-      "totalRevenue": 125000,
-      "averageSessionDuration": 75
-    },
-    "revenueData": [
-      {
-        "month": "Jan",
-        "revenue": 32000,
-        "appointments": 108
-      }
-    ],
-    "treatmentEffectiveness": [
-      {
-        "treatment": "Panchakarma",
-        "successRate": 95,
-        "totalPatients": 22
-      }
-    ]
-  }
-}
-```
+## Analytics Endpoints
 
-#### GET /api/analytics/patient-progress/:patientId
-Get patient progress analytics.
+Practitioner/admin only. All return `{ success: true, data: { ... } }`.
 
-## File Upload
+### GET /api/analytics/overview
+Dashboard summary: `totalPatients`, `activePatients`, `totalAppointments`, `completedTreatments`.
 
-#### POST /api/upload
-Upload files (images, documents).
+### GET /api/analytics/revenue
+Revenue trend data (last 6 months).
 
-**Request:** Multipart form data
-- `file`: File to upload
-- `type`: File type (profile, document, report)
+### GET /api/analytics/treatment-effectiveness
+Treatment effectiveness metrics grouped by type.
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "filename": "profile_123_1642694400.jpg",
-    "url": "/uploads/profile_123_1642694400.jpg",
-    "size": 245760,
-    "mimetype": "image/jpeg"
-  }
-}
-```
+### GET /api/analytics/patient-flow
+Patient flow by day of week.
 
-## Error Handling
+---
 
-The API uses standard HTTP status codes and returns errors in the following format:
+## Error Format
+
+All errors follow the same structure:
 
 ```json
 {
   "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid input data",
-    "details": [
-      {
-        "field": "email",
-        "message": "Email is required"
-      }
-    ]
-  }
+  "message": "Human-readable error message",
+  "errors": [{ "field": "email", "message": "Email is required" }]
 }
 ```
 
-### Common Error Codes
+**HTTP Status Codes:**
+- `200` — Success
+- `201` — Created
+- `400` — Validation error
+- `401` — Authentication required / Invalid token
+- `403` — Insufficient permissions
+- `404` — Resource not found
+- `409` — Conflict (duplicate email)
+- `500` — Internal server error
 
-- `400 Bad Request`: Invalid request data
-- `401 Unauthorized`: Authentication required
-- `403 Forbidden`: Insufficient permissions
-- `404 Not Found`: Resource not found
-- `409 Conflict`: Resource already exists
-- `422 Unprocessable Entity`: Validation errors
-- `429 Too Many Requests`: Rate limit exceeded
-- `500 Internal Server Error`: Server error
+---
 
 ## Rate Limiting
 
-The API implements rate limiting to prevent abuse:
+Global: 100 requests per 15 minutes per IP on all `/api/` routes.
 
-- **General endpoints**: 100 requests per 15 minutes
-- **Authentication endpoints**: 5 requests per 15 minutes
-- **File upload**: 10 requests per hour
-
-Rate limit headers are included in responses:
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1642694400
-```
+---
 
 ## Pagination
 
-List endpoints support pagination with the following parameters:
-
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10, max: 100)
-
-Response includes pagination metadata:
-```json
-{
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 150,
-    "pages": 15,
-    "hasNext": true,
-    "hasPrev": false
-  }
-}
-```
-
-## Filtering and Sorting
-
-Many endpoints support filtering and sorting:
-
-**Query Parameters:**
-- `sort`: Sort field (e.g., `createdAt`, `-createdAt` for descending)
-- `filter[field]`: Filter by field value
-- `search`: Search across multiple fields
-
-Example:
-```
-GET /api/patients?sort=-createdAt&filter[constitution]=Vata&search=john
-```
-
-## Webhooks
-
-The API supports webhooks for real-time notifications:
-
-#### POST /api/webhooks/register
-Register webhook endpoint.
-
-**Request:**
-```json
-{
-  "url": "https://your-app.com/webhook",
-  "events": ["appointment.created", "treatment.completed"],
-  "secret": "your-webhook-secret"
-}
-```
-
-### Webhook Events
-
-- `appointment.created`
-- `appointment.updated`
-- `appointment.cancelled`
-- `treatment.created`
-- `treatment.completed`
-- `patient.registered`
-- `notification.sent`
-
-## SDK and Libraries
-
-Official SDKs are available for:
-- JavaScript/Node.js
-- Python
-- PHP
-- React (hooks library)
-
-## Testing
-
-Use the following test credentials in development:
-
-**Patient Account:**
-- Email: patient@test.com
-- Password: test123
-
-**Practitioner Account:**
-- Email: doctor@test.com
-- Password: test123
-
-## Support
-
-For API support:
-- Email: api-support@ayursutra.com
-- Documentation: https://docs.ayursutra.com
-- Status Page: https://status.ayursutra.com
+List endpoints accept `?limit=N&offset=M`. Default: 50 items, offset 0.

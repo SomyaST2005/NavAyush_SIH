@@ -1,103 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { patientAPI } from '../services/api';
 
 export const usePatientManagement = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Mock patients data
-  const mockPatients = [
-    {
-      id: 'P001',
-      name: 'Rajesh Kumar',
-      age: 45,
-      gender: 'Male',
-      phone: '+91 98765 43210',
-      email: 'rajesh.kumar@email.com',
-      constitution: 'Vata-Pitta',
-      lastVisit: '2025-01-15',
-      status: 'Active',
-      nextAppointment: '2025-01-22'
-    },
-    {
-      id: 'P002',
-      name: 'Priya Sharma',
-      age: 32,
-      gender: 'Female',
-      phone: '+91 87654 32109',
-      email: 'priya.sharma@email.com',
-      constitution: 'Pitta-Kapha',
-      lastVisit: '2025-01-18',
-      status: 'Active',
-      nextAppointment: '2025-01-25'
-    },
-    {
-      id: 'P003',
-      name: 'Amit Patel',
-      age: 38,
-      gender: 'Male',
-      phone: '+91 76543 21098',
-      email: 'amit.patel@email.com',
-      constitution: 'Kapha-Vata',
-      lastVisit: '2025-01-10',
-      status: 'Completed',
-      nextAppointment: null
+  const fetchPatients = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await patientAPI.getAll();
+      setPatients(response.data.patients || []);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch patients');
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  useEffect(() => {
-    // Simulate API call
-    const fetchPatients = async () => {
-      try {
-        setLoading(true);
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setPatients(mockPatients);
-        setError(null);
-      } catch (err) {
-        setError('Failed to fetch patients');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPatients();
   }, []);
 
-  const addPatient = (patientData) => {
-    const newPatient = {
-      id: `P${String(patients.length + 1).padStart(3, '0')}`,
-      ...patientData,
-      status: 'Active'
-    };
-    setPatients(prev => [...prev, newPatient]);
-    return newPatient;
-  };
+  const addPatient = useCallback(async (patientData) => {
+    try {
+      const response = await patientAPI.create(patientData);
+      setPatients(prev => [...prev, response.data.patient]);
+      return response.data.patient;
+    } catch (err) {
+      throw new Error(err.response?.data?.message || 'Failed to add patient');
+    }
+  }, []);
 
-  const updatePatient = (patientId, updates) => {
-    setPatients(prev => 
-      prev.map(patient => 
-        patient.id === patientId 
-          ? { ...patient, ...updates }
-          : patient
-      )
-    );
-  };
+  const updatePatient = useCallback(async (patientId, updates) => {
+    try {
+      await patientAPI.update(patientId, updates);
+      setPatients(prev =>
+        prev.map(p => (p.id === patientId ? { ...p, ...updates } : p))
+      );
+    } catch (err) {
+      throw new Error(err.response?.data?.message || 'Failed to update patient');
+    }
+  }, []);
 
-  const deletePatient = (patientId) => {
-    setPatients(prev => prev.filter(patient => patient.id !== patientId));
-  };
-
-  const searchPatients = (query) => {
+  const searchPatients = useCallback((query) => {
     if (!query) return patients;
-    
-    return patients.filter(patient =>
-      patient.name.toLowerCase().includes(query.toLowerCase()) ||
-      patient.email.toLowerCase().includes(query.toLowerCase()) ||
-      patient.phone.includes(query) ||
-      patient.id.toLowerCase().includes(query.toLowerCase())
+    return patients.filter(p =>
+      p.name?.toLowerCase().includes(query.toLowerCase()) ||
+      p.email?.toLowerCase().includes(query.toLowerCase()) ||
+      p.phone?.includes(query) ||
+      p.id?.toLowerCase().includes(query.toLowerCase())
     );
-  };
+  }, [patients]);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
 
   return {
     patients,
@@ -105,7 +60,7 @@ export const usePatientManagement = () => {
     error,
     addPatient,
     updatePatient,
-    deletePatient,
-    searchPatients
+    searchPatients,
+    refetch: fetchPatients,
   };
 };

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, X, Check, AlertCircle, Info, CheckCircle, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, X, AlertCircle, Info, CheckCircle, Clock } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 
 const NotificationPanel = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState('all');
+  const navigate = useNavigate();
 
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -68,11 +70,9 @@ const NotificationPanel = () => {
     if (!notification.isRead) {
       markAsRead(notification.id);
     }
-    
-    // Handle notification action based on type
+    setIsOpen(false);
     if (notification.actionUrl) {
-      // Navigate to specific page or perform action
-      // TODO: Implement navigation to notification.actionUrl
+      navigate(notification.actionUrl);
     }
   };
 

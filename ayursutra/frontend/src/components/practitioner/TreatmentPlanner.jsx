@@ -409,6 +409,15 @@ const TreatmentPlanner = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <h4 className="text-lg font-medium text-gray-800 mb-4">Sessions</h4>
+                <button
+                  onClick={() => {
+                    const newSession = { type: prompt('Session type:'), date: prompt('Date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]), duration: prompt('Duration (min):', '60'), status: 'scheduled' };
+                    if (newSession.type && newSession.date) addSessionToTreatment(selectedTreatment.id, newSession);
+                  }}
+                  className="mb-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  + Add Session
+                </button>
                 <div className="space-y-3">
                   {selectedTreatment.sessions.map((session) => (
                     <div key={session.id} className="border border-gray-200 rounded-lg p-4">

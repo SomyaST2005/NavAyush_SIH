@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -35,8 +36,9 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Router>
+          <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
           <ConditionalNavbar />
-          <div className="App">
+          <main className="App">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
@@ -90,7 +92,7 @@ function App() {
               {/* Redirect unknown routes to landing page */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </div>
+          </main>
         </Router>
       </AuthProvider>
     </ErrorBoundary>

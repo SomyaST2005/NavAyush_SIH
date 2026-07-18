@@ -1,41 +1,52 @@
 const express = require('express');
 const router = express.Router();
+const Treatment = require('../models/Treatment');
+const Patient = require('../models/Patient');
+const { authorize } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const { createTreatmentSchema, updateTreatmentSchema } = require('../validators/treatmentValidator');
 
-// Mock treatments data
-const mockTreatments = [
-  {
-    id: 1,
-    patientId: 'P001',
-    type: 'Panchakarma',
-    startDate: '2024-01-15',
-    endDate: '2024-02-15',
-    status: 'Active',
-    sessions: 12,
-    completedSessions: 8
-  },
-  {
-    id: 2,
-    patientId: 'P002',
-    type: 'Abhyanga',
-    startDate: '2024-01-10',
-    endDate: '2024-01-25',
-    status: 'Completed',
-    sessions: 10,
-    completedSessions: 10
-  }
-];
+router.get('/', async (req, res, next) => {
+  try {
+    const { limit = 50, offset = 0, status } = req.query;
+    let query = {};
 
-router.get('/', (req, res) => {
-  res.json({ success: true, treatments: mockTreatments });
+    if (req.userRole === 'patient') {
+      const patient = await Patient.findOne({ user: req.userId });
+      if (patient) query.patient = patient._id;
+      else return res.json({ success: true, treatments: [] });
+    }
+    if (status) query.status = status;
+
+    const treatments = await Treatment.find(query)
+      .populate('patient', 'name patientId')
+      .skip(parseInt(offset)).limit(parseInt(limit));
+
+    res.json({ success: true, treatments });
+  } catch (err) { next(err); }
 });
 
-router.get('/:id', (req, res) => {
-  const treatment = mockTreatments.find(t => t.id === parseInt(req.params.id));
-  if (treatment) {
+router.get('/:id', async (req, res, next) => {
+  try {
+    const treatment = await Treatment.findById(req.params.id).populate('patient', 'name');
+    if (!treatment) return res.status(404).json({ success: false, message: 'Treatment not found' });
     res.json({ success: true, treatment });
-  } else {
-    res.status(404).json({ success: false, message: 'Treatment not found' });
-  }
+  } catch (err) { next(err); }
+});
+
+router.post('/', authorize('practitioner', 'admin'), validate(createTreatmentSchema), async (req, res, next) => {
+  try {
+    const treatment = await Treatment.create({ ...req.body, status: 'Active' });
+    res.status(201).json({ success: true, treatment });
+  } catch (err) { next(err); }
+});
+
+router.put('/:id', authorize('practitioner', 'admin'), validate(updateTreatmentSchema), async (req, res, next) => {
+  try {
+    const treatment = await Treatment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!treatment) return res.status(404).json({ success: false, message: 'Treatment not found' });
+    res.json({ success: true, treatment });
+  } catch (err) { next(err); }
 });
 
 module.exports = router;

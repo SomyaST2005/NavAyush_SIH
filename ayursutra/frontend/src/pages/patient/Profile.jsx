@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Calendar, MapPin, Edit3, Save, X, Camera, Shield } from 'lucide-react';
+import { User, Mail, Phone, Calendar, MapPin, Edit3, Save, X, Camera, Shield, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const Profile = () => {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
+  const [profileImage, setProfileImage] = useState(null);
+  const fileInputRef = React.useRef(null);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => setProfileImage(event.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -78,13 +93,32 @@ const Profile = () => {
     }
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!profileData.fullName.trim()) {
+      errors.fullName = 'Full name is required';
+    }
+    if (!profileData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(profileData.email)) {
+      errors.email = 'Please enter a valid email';
+    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) return;
+
     try {
       setLoading(true);
+      setError('');
       await updateProfile(profileData);
       setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update profile:', error);
+      toast.success('Profile updated successfully!');
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+      toast.error('Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -182,19 +216,29 @@ const Profile = () => {
           </div>
         </div>
 
+        {error && (
+          <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">{error}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Picture & Basic Info */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <div className="text-center">
                 <div className="relative inline-block">
-                  <div className="w-32 h-32 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                    {profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  <div className="w-32 h-32 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
+                    {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
                   {isEditing && (
-                    <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50">
-                      <Camera className="h-4 w-4 text-gray-600" />
-                    </button>
+                    <>
+                      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                      <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50" aria-label="Upload profile picture">
+                        <Camera className="h-4 w-4 text-gray-600" />
+                      </button>
+                    </>
                   )}
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800 mt-4">{profileData.fullName}</h2>
@@ -229,12 +273,17 @@ const Profile = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={profileData.fullName}
-                      onChange={(e) => handleInputChange('fullName', e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                    <>
+                      <input
+                        type="text"
+                        value={profileData.fullName}
+                        onChange={(e) => handleInputChange('fullName', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${validationErrors.fullName ? 'border-red-300' : 'border-gray-300'}`}
+                      />
+                      {validationErrors.fullName && (
+                        <p className="text-red-600 text-xs mt-1">{validationErrors.fullName}</p>
+                      )}
+                    </>
                   ) : (
                     <p className="p-3 bg-gray-50 rounded-lg">{profileData.fullName || 'Not provided'}</p>
                   )}
@@ -243,12 +292,17 @@ const Profile = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                   {isEditing ? (
-                    <input
-                      type="email"
-                      value={profileData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                    <>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${validationErrors.email ? 'border-red-300' : 'border-gray-300'}`}
+                      />
+                      {validationErrors.email && (
+                        <p className="text-red-600 text-xs mt-1">{validationErrors.email}</p>
+                      )}
+                    </>
                   ) : (
                     <p className="p-3 bg-gray-50 rounded-lg flex items-center">
                       <Mail className="h-4 w-4 mr-2 text-gray-500" />

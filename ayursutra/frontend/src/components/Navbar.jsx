@@ -86,7 +86,10 @@ const Navbar = () => {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+            <button
+              aria-label="Notifications"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Bell className="h-5 w-5" />
             </button>
             
@@ -113,6 +116,8 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-expanded={isMobileMenuOpen}
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100"
             >
               {isMobileMenuOpen ? (

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, User, Phone, Video } from 'lucide-react';
 import { useAppointments } from '../../hooks/useAppointments';
+import toast from 'react-hot-toast';
 
 const UpcomingAppointments = () => {
   const { appointments, loading, error, rescheduleAppointment, cancelAppointment } = useAppointments();
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -194,29 +197,28 @@ const UpcomingAppointments = () => {
         </div>
       )}
 
-      {/* Reschedule Modal would go here */}
+      {/* Reschedule Modal */}
       {selectedAppointment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Reschedule Appointment</h3>
-            <p className="text-gray-600 mb-4">
-              Would you like to reschedule your {selectedAppointment.treatmentType} appointment?
-            </p>
-            <div className="flex space-x-3">
-              <button 
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg"
-                onClick={() => {
-                  rescheduleAppointment(selectedAppointment.id);
-                  setSelectedAppointment(null);
-                }}
-              >
-                Reschedule
-              </button>
-              <button 
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg"
-                onClick={() => setSelectedAppointment(null)}
-              >
-                Cancel
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold">Reschedule Appointment</h3>
+              <p className="text-gray-600 text-sm mt-1">{selectedAppointment.treatmentType} with {selectedAppointment.practitioner?.fullName}</p>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Date</label>
+                <input type="date" value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full p-2 border border-gray-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Time</label>
+                <input type="time" value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)} className="w-full p-2 border border-gray-300 rounded-lg" />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-200 flex space-x-3">
+              <button className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg" onClick={() => setSelectedAppointment(null)}>Cancel</button>
+              <button className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg" onClick={() => { rescheduleAppointment(selectedAppointment.id, { date: rescheduleDate, time: rescheduleTime }); setSelectedAppointment(null); toast.success('Appointment rescheduled'); }}>
+                Confirm Reschedule
               </button>
             </div>
           </div>
